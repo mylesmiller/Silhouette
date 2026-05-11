@@ -1,4 +1,4 @@
-export type Difficulty = 'easy' | 'medium' | 'hard';
+export type Difficulty = 'daily' | 'hard';
 
 export interface DifficultyConfig {
   label: string;
@@ -12,15 +12,16 @@ export interface DifficultyConfig {
   silhouettePeekMs: number | null;
   showGhost: boolean;
   showQueue: boolean;
+  queueLookahead: number;
   overhangs: boolean;
 }
 
 export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
-  easy: {
-    label: 'easy',
+  daily: {
+    label: 'daily',
     cols: 8,
     rows: 12,
-    cell: 32,
+    cell: 44,
     pieceMin: 5,
     pieceMax: 6,
     showOutline: true,
@@ -28,34 +29,22 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     silhouettePeekMs: null,
     showGhost: true,
     showQueue: true,
-    overhangs: false,
-  },
-  medium: {
-    label: 'medium',
-    cols: 9,
-    rows: 14,
-    cell: 28,
-    pieceMin: 8,
-    pieceMax: 10,
-    showOutline: false,
-    showSilhouette: true,
-    silhouettePeekMs: null,
-    showGhost: true,
-    showQueue: true,
+    queueLookahead: 7,
     overhangs: false,
   },
   hard: {
     label: 'hard',
-    cols: 10,
-    rows: 16,
-    cell: 24,
-    pieceMin: 12,
-    pieceMax: 15,
-    showOutline: false,
+    cols: 9,
+    rows: 14,
+    cell: 38,
+    pieceMin: 8,
+    pieceMax: 10,
+    showOutline: true,
     showSilhouette: true,
-    silhouettePeekMs: 5000,
-    showGhost: false,
+    silhouettePeekMs: null,
+    showGhost: true,
     showQueue: true,
+    queueLookahead: 5,
     overhangs: false,
   },
 };

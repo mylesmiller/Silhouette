@@ -68,14 +68,37 @@ function drawTargetOutline(
   rows: number,
   size: number
 ) {
-  ctx.save();
-  ctx.strokeStyle = 'rgba(20, 20, 20, 0.55)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([5, 4]);
-  ctx.lineCap = 'round';
-
   const isTarget = (x: number, y: number) =>
     x >= 0 && x < cols && y >= 0 && y < rows && !!target[y][x];
+
+  // Diagonal hatch fill inside the silhouette so the player sees the shape
+  ctx.save();
+  ctx.beginPath();
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      if (!target[y][x]) continue;
+      ctx.rect(x * size, y * size, size, size);
+    }
+  }
+  ctx.clip();
+  ctx.strokeStyle = 'rgba(244, 239, 230, 0.18)';
+  ctx.lineWidth = 1.5;
+  const w = cols * size;
+  const h = rows * size;
+  const step = 8;
+  for (let d = -h; d < w; d += step) {
+    ctx.beginPath();
+    ctx.moveTo(d, 0);
+    ctx.lineTo(d + h, h);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(244, 239, 230, 0.75)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.lineCap = 'round';
 
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
@@ -118,6 +141,9 @@ export default function GameBoard({ board, target, active, difficulty }: Props) 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    // Bail if board/target haven't been resized to match the new difficulty yet
+    if (board.length !== cfg.rows || (board[0]?.length ?? 0) !== cfg.cols) return;
+    if (target.length !== cfg.rows || (target[0]?.length ?? 0) !== cfg.cols) return;
     // Set canvas pixel size directly (NOT via CSS) to avoid blurring
     canvas.width = cfg.cols * cfg.cell;
     canvas.height = cfg.rows * cfg.cell;

@@ -37,10 +37,12 @@ export interface UseGame {
   setDifficulty: (d: Difficulty) => void;
   newPuzzle: () => void;
   reset: () => void;
+  retryKeepTime: () => void;
   // peekNow: current performance.now() value for animation tick
   peekNow: number;
   // stats for HUD
   stats: ReturnType<typeof computeStats>;
+  elapsedMs: number;
 }
 
 function spawnFromQueue(
@@ -65,7 +67,7 @@ function spawnFromQueue(
 }
 
 export function useGame(): UseGame {
-  const [difficulty, setDifficultyState] = useState<Difficulty>('medium');
+  const [difficulty, setDifficultyState] = useState<Difficulty>('daily');
   const [puzzleOffset, setPuzzleOffset] = useState(0);
   const [seed, setSeed] = useState<number>(() => dateSeed());
 
@@ -86,9 +88,14 @@ export function useGame(): UseGame {
   const [peekNow, setPeekNow] = useState(0);
   // bumped whenever we want to (re)load a puzzle
   const [reloadKey, setReloadKey] = useState(0);
+  const [startedAt, setStartedAt] = useState<number>(() => Date.now());
+  const [endedAt, setEndedAt] = useState<number | null>(null);
+  const [nowTick, setNowTick] = useState<number>(() => Date.now());
 
   const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const peekRafRef = useRef<number | null>(null);
+  // When true, next puzzle load preserves the existing timer (failed retry)
+  const keepTimerRef = useRef(false);
 
   // Load a puzzle whenever seed/offset/difficulty/reloadKey changes
   useEffect(() => {
@@ -105,6 +112,17 @@ export function useGame(): UseGame {
     setActive(spawn.active);
     setGameOver(spawn.gameOver);
     setWon(false);
+    const now = Date.now();
+    if (keepTimerRef.current) {
+      // Failed-retry: keep the existing startedAt, just clear endedAt
+      setEndedAt(null);
+      setNowTick(now);
+      keepTimerRef.current = false;
+    } else {
+      setStartedAt(now);
+      setEndedAt(null);
+      setNowTick(now);
+    }
 
     // Cancel any previous peek timers
     if (peekTimerRef.current) {
@@ -156,6 +174,13 @@ export function useGame(): UseGame {
     }
   }, [peekDeadline]);
 
+  // Tick the clock every second while playing
+  useEffect(() => {
+    if (gameOver) return;
+    const id = setInterval(() => setNowTick(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [gameOver, startedAt]);
+
   // Helper: spawn next piece from the queue and possibly trigger game over / win
   const advanceAfterLock = useCallback(
     (newBoard: Board, newIdx: number) => {
@@ -164,12 +189,13 @@ export function useGame(): UseGame {
       setBoard(newBoard);
       setQueueIdx(newIdx);
       setActive(spawn.active);
-      if (spawn.gameOver) {
+      // End game on either queue exhaust OR successful match (early win)
+      const winNow = isWin(newBoard, target, { cols: conf.cols, rows: conf.rows });
+      if (winNow || spawn.gameOver) {
         setGameOver(true);
-        // Reveal silhouette on game end
         setSilhouetteHidden(false);
-        const winNow = isWin(newBoard, target, { cols: conf.cols, rows: conf.rows });
         setWon(winNow);
+        setEndedAt(Date.now());
       }
     },
     [difficulty, queue, target]
@@ -202,18 +228,9 @@ export function useGame(): UseGame {
           }
           break;
         }
-        case 'ArrowUp':
-        case 'x':
-        case 'X': {
+        case 'ArrowUp': {
           e.preventDefault();
           const next = gameRotate(board, active, 1, d);
-          if (next) setActive(next);
-          break;
-        }
-        case 'z':
-        case 'Z': {
-          e.preventDefault();
-          const next = gameRotate(board, active, -1, d);
           if (next) setActive(next);
           break;
         }
@@ -242,10 +259,17 @@ export function useGame(): UseGame {
     setReloadKey((k) => k + 1);
   }, []);
 
+  const retryKeepTime = useCallback(() => {
+    keepTimerRef.current = true;
+    setReloadKey((k) => k + 1);
+  }, []);
+
   const stats = useMemo(
     () => computeStats(board, target, dims),
     [board, target, dims]
   );
+
+  const elapsedMs = (endedAt ?? nowTick) - startedAt;
 
   return {
     state: {
@@ -265,7 +289,9 @@ export function useGame(): UseGame {
     setDifficulty,
     newPuzzle,
     reset,
+    retryKeepTime,
     peekNow,
     stats,
+    elapsedMs,
   };
 }

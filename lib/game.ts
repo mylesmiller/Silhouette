@@ -105,8 +105,14 @@ export function hardDrop(board: Board, active: ActivePiece, dims: Dims): Board {
 // Match-percent and overflow stats vs target silhouette.
 export function computeStats(board: Board, target: Board, dims: Dims) {
   let targetCells = 0, boardCells = 0, matched = 0, overflow = 0;
-  for (let y = 0; y < dims.rows; y++) {
-    for (let x = 0; x < dims.cols; x++) {
+  const rows = Math.min(dims.rows, target.length, board.length);
+  const cols = Math.min(
+    dims.cols,
+    target[0]?.length ?? 0,
+    board[0]?.length ?? 0
+  );
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
       const t = target[y][x] ? 1 : 0;
       const b = board[y][x] ? 1 : 0;
       if (t) targetCells++;

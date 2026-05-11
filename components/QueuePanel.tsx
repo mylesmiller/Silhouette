@@ -10,7 +10,7 @@ interface Props {
   difficulty: Difficulty;
 }
 
-const QUEUE_CELL = 14;
+const QUEUE_CELL = 22;
 
 function getCssColor(varName: string): string {
   if (typeof window === 'undefined') return '#000';
@@ -32,8 +32,8 @@ export default function QueuePanel({ queue, queueIdx, difficulty }: Props) {
     ctx.fillStyle = getCssColor('--paper');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const upcoming = queue.slice(queueIdx + 1, queueIdx + 8);
-    const slotH = 38;
+    const upcoming = queue.slice(queueIdx + 1, queueIdx + 1 + cfg.queueLookahead);
+    const slotH = QUEUE_CELL * 3 + 8;
 
     for (let i = 0; i < upcoming.length; i++) {
       const { type } = upcoming[i];

@@ -52,6 +52,7 @@ export default function TargetPanel({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    if (target.length !== cfg.rows || (target[0]?.length ?? 0) !== cfg.cols) return;
     canvas.width = cfg.cols * cfg.cell;
     canvas.height = cfg.rows * cfg.cell;
     const ctx = canvas.getContext('2d');
@@ -90,8 +91,6 @@ export default function TargetPanel({
           const py = y * cfg.cell;
           ctx.fillStyle = targetColor;
           ctx.fillRect(px + 1, py + 1, cfg.cell - 2, cfg.cell - 2);
-          ctx.fillStyle = 'rgba(255,255,255,0.18)';
-          ctx.fillRect(px + cfg.cell / 2 - 1, py + cfg.cell / 2 - 1, 2, 2);
         }
       }
     }

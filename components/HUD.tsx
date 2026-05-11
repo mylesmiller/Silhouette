@@ -1,39 +1,33 @@
 'use client';
 
 interface Props {
-  piecesLeft: number;
-  matchPct: number;
-  overflow: number;
+  elapsedMs: number;
   onNewPuzzle: () => void;
   onReset: () => void;
 }
 
-export default function HUD({ piecesLeft, matchPct, overflow, onNewPuzzle, onReset }: Props) {
-  const matchClass =
-    'stat-value' + (matchPct === 100 && overflow === 0 ? ' match' : '');
-  const overflowClass = 'stat-value' + (overflow > 0 ? ' over' : '');
+export function formatTime(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, '0')}`;
+}
 
+export default function HUD({ elapsedMs, onNewPuzzle, onReset }: Props) {
   return (
     <div className="hud">
       <div className="stats">
         <div className="stat">
-          <div className="stat-label">pieces left</div>
-          <div className="stat-value">{piecesLeft}</div>
-        </div>
-        <div className="stat">
-          <div className="stat-label">match</div>
-          <div className={matchClass}>{matchPct}%</div>
-        </div>
-        <div className="stat">
-          <div className="stat-label">overflow</div>
-          <div className={overflowClass}>{overflow}</div>
+          <div className="stat-label">time</div>
+          <div className="stat-value">{formatTime(elapsedMs)}</div>
         </div>
       </div>
 
       <div className="controls-hint">
-        <kbd>←</kbd> <kbd>→</kbd> move &nbsp;·&nbsp; <kbd>↑</kbd> / <kbd>X</kbd> rotate &nbsp;·&nbsp; <kbd>Z</kbd> rotate ccw
-        <br />
-        <kbd>↓</kbd> soft drop &nbsp;·&nbsp; <kbd>space</kbd> hard drop
+        <span><kbd>←</kbd> <kbd>→</kbd> move</span>
+        <span><kbd>↑</kbd> rotate</span>
+        <span><kbd>↓</kbd> soft drop</span>
+        <span><kbd>space</kbd> hard drop</span>
       </div>
 
       <div className="buttons">
