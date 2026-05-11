@@ -2,6 +2,8 @@
 
 interface Props {
   elapsedMs: number;
+  canUndo: boolean;
+  onUndo: () => void;
   onNewPuzzle: () => void;
   onReset: () => void;
 }
@@ -13,7 +15,7 @@ export function formatTime(ms: number): string {
   return `${m}:${String(r).padStart(2, '0')}`;
 }
 
-export default function HUD({ elapsedMs, onNewPuzzle, onReset }: Props) {
+export default function HUD({ elapsedMs, canUndo, onUndo, onNewPuzzle, onReset }: Props) {
   return (
     <div className="hud">
       <div className="stats">
@@ -31,6 +33,7 @@ export default function HUD({ elapsedMs, onNewPuzzle, onReset }: Props) {
       </div>
 
       <div className="buttons">
+        <button onClick={onUndo} disabled={!canUndo}>undo</button>
         <button onClick={onNewPuzzle}>new puzzle</button>
         <button className="primary" onClick={onReset}>
           restart

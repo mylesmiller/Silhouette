@@ -38,6 +38,8 @@ export interface UseGame {
   newPuzzle: () => void;
   reset: () => void;
   retryKeepTime: () => void;
+  undo: () => void;
+  canUndo: boolean;
   // peekNow: current performance.now() value for animation tick
   peekNow: number;
   // stats for HUD
@@ -96,6 +98,8 @@ export function useGame(): UseGame {
   const peekRafRef = useRef<number | null>(null);
   // When true, next puzzle load preserves the existing timer (failed retry)
   const keepTimerRef = useRef(false);
+  // Stack of {board, queueIdx} snapshots taken right before each piece locks
+  const historyRef = useRef<{ board: Board; queueIdx: number }[]>([]);
 
   // Load a puzzle whenever seed/offset/difficulty/reloadKey changes
   useEffect(() => {
@@ -109,6 +113,7 @@ export function useGame(): UseGame {
     setTarget(puzzle.target);
     setQueue(puzzle.queue);
     setQueueIdx(0);
+    historyRef.current = [];
     setActive(spawn.active);
     setGameOver(spawn.gameOver);
     setWon(false);
@@ -222,6 +227,7 @@ export function useGame(): UseGame {
           e.preventDefault();
           const res = gameSoftDrop(board, active, d);
           if (res.locked) {
+            historyRef.current.push({ board, queueIdx });
             advanceAfterLock(res.board, queueIdx + 1);
           } else {
             setActive(res.active);
@@ -237,6 +243,7 @@ export function useGame(): UseGame {
         case ' ': {
           e.preventDefault();
           const nb = gameHardDrop(board, active, d);
+          historyRef.current.push({ board, queueIdx });
           advanceAfterLock(nb, queueIdx + 1);
           break;
         }
@@ -264,6 +271,19 @@ export function useGame(): UseGame {
     setReloadKey((k) => k + 1);
   }, []);
 
+  const undo = useCallback(() => {
+    const snap = historyRef.current.pop();
+    if (!snap) return;
+    const conf = DIFFICULTIES[difficulty];
+    setBoard(snap.board);
+    setQueueIdx(snap.queueIdx);
+    setGameOver(false);
+    setWon(false);
+    setEndedAt(null);
+    const spawn = spawnFromQueue(queue, snap.queueIdx, snap.board, conf.cols, conf.rows);
+    setActive(spawn.active);
+  }, [difficulty, queue]);
+
   const stats = useMemo(
     () => computeStats(board, target, dims),
     [board, target, dims]
@@ -290,6 +310,8 @@ export function useGame(): UseGame {
     newPuzzle,
     reset,
     retryKeepTime,
+    undo,
+    canUndo: queueIdx > 0 && !gameOver,
     peekNow,
     stats,
     elapsedMs,

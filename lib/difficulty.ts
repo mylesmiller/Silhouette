@@ -34,9 +34,9 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
   },
   hard: {
     label: 'hard',
-    cols: 9,
-    rows: 14,
-    cell: 38,
+    cols: 8,
+    rows: 12,
+    cell: 44,
     pieceMin: 8,
     pieceMax: 10,
     showOutline: true,

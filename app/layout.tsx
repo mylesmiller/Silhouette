@@ -25,7 +25,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Silhouette — a daily tetris puzzle',
+  title: 'SILHOUETTE',
   description: 'A daily Tetris-style puzzle. Recreate the silhouette.',
 };
 

@@ -14,7 +14,7 @@ import { DIFFICULTIES } from '@/lib/difficulty';
 const HOWTO_KEY = 'silhouette-seen-howto';
 
 export default function Page() {
-  const { state, stats, setDifficulty, newPuzzle, reset, retryKeepTime, peekNow, elapsedMs } = useGame();
+  const { state, stats, setDifficulty, newPuzzle, reset, retryKeepTime, undo, canUndo, peekNow, elapsedMs } = useGame();
   const [modalOpen, setModalOpen] = useState(false);
   const [howtoOpen, setHowtoOpen] = useState(false);
 
@@ -84,8 +84,10 @@ export default function Page() {
 
       <HUD
         elapsedMs={elapsedMs}
+        canUndo={canUndo}
+        onUndo={undo}
         onNewPuzzle={newPuzzle}
-        onReset={reset}
+        onReset={retryKeepTime}
       />
 
       <ResultModal

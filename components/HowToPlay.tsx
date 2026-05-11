@@ -34,14 +34,6 @@ export default function HowToPlay({ open, onClose }: Props) {
             </div>
           </div>
 
-          <div className="howto-row">
-            <div className="howto-swatch piece" />
-            <div className="howto-text">
-              <strong>Drop the queue in order</strong>
-              <span>Pieces fall one at a time — middle panel shows what&apos;s next.</span>
-            </div>
-          </div>
-
           <div className="howto-divider" />
 
           <div className="howto-keys">
@@ -57,7 +49,7 @@ export default function HowToPlay({ open, onClose }: Props) {
           </div>
           <div className="howto-row small">
             <div className="howto-pill hard">HARD</div>
-            <span>Bigger board, more pieces. Same puzzle for everyone.</span>
+            <span>Same board, more pieces.</span>
           </div>
         </div>
 
