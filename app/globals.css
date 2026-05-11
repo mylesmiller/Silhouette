@@ -63,6 +63,18 @@ header {
   position: relative;
   justify-content: center;
 }
+.brand-stack {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+.brand-logo {
+  width: clamp(40px, 5vw, 56px);
+  height: auto;
+  display: block;
+  shape-rendering: crispEdges;
+}
 .brand-title {
   font-family: var(--font-fraunces), 'Fraunces', serif;
   font-weight: 700;

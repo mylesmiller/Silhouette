@@ -34,7 +34,9 @@ export default function HUD({ elapsedMs, canUndo, onUndo, onNewPuzzle, onReset }
       </div>
 
       <div className="buttons">
-        <button onClick={onNewPuzzle}>new puzzle</button>
+        {process.env.NODE_ENV === 'development' && (
+          <button onClick={onNewPuzzle}>new puzzle</button>
+        )}
         <button className="primary" onClick={onReset}>restart</button>
       </div>
     </div>

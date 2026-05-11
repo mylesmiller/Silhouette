@@ -43,7 +43,19 @@ export default function Page() {
   return (
     <div className="app">
       <header className="header-centered">
-        <h1 className="brand-title">stax.</h1>
+        <div className="brand-stack">
+          <svg className="brand-logo" viewBox="0 0 4 3" aria-hidden="true">
+            <rect x="1" y="0" width="1" height="1" fill="var(--c-I)" />
+            <rect x="2" y="0" width="1" height="1" fill="var(--c-I)" />
+            <rect x="3" y="0" width="1" height="1" fill="var(--c-I)" />
+            <rect x="2" y="1" width="1" height="1" fill="var(--c-I)" />
+            <rect x="1" y="1" width="1" height="1" fill="var(--ink)" />
+            <rect x="0" y="2" width="1" height="1" fill="var(--ink)" />
+            <rect x="1" y="2" width="1" height="1" fill="var(--ink)" />
+            <rect x="2" y="2" width="1" height="1" fill="var(--ink)" />
+          </svg>
+          <h1 className="brand-title">stax.</h1>
+        </div>
         <button
           className="help-btn header-help"
           aria-label="how to play"
