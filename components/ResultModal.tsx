@@ -118,15 +118,11 @@ export default function ResultModal({
               >
                 Try {next} →
               </button>
-            ) : won ? (
-              <button className="result-btn primary-cta" onClick={onContinue}>
-                Next
-              </button>
-            ) : (
+            ) : !won ? (
               <button className="result-btn primary-cta fail" onClick={onContinue}>
                 Restart
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
