@@ -25,8 +25,8 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SILHOUETTE',
-  description: 'A daily Tetris-style puzzle. Recreate the silhouette.',
+  title: 'STAX',
+  description: 'A daily stacking puzzle. Recreate the silhouette.',
 };
 
 export default function RootLayout({

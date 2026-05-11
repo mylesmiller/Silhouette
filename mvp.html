@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SILHOUETTE</title>
+<title>STAX</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&display=swap" rel="stylesheet">
@@ -381,8 +381,8 @@
 
   <header>
     <div class="brand">
-      <h1>silhouette.</h1>
-      <div class="sub">a daily tetris puzzle</div>
+      <h1>stax.</h1>
+      <div class="sub">a daily stacking puzzle</div>
     </div>
     <div class="meta">
       <div class="puzzle-no" id="puzzleNo">PUZZLE #001</div>
@@ -447,7 +447,7 @@
 
     <div class="controls-hint">
       <kbd>←</kbd> <kbd>→</kbd> move &nbsp;·&nbsp; <kbd>↑</kbd> / <kbd>X</kbd> rotate &nbsp;·&nbsp; <kbd>Z</kbd> rotate ccw<br/>
-      <kbd>↓</kbd> soft drop &nbsp;·&nbsp; <kbd>space</kbd> hard drop
+      <kbd>↓</kbd> soft drop &nbsp;·&nbsp; <kbd>space</kbd> hard drop &nbsp;·&nbsp; <kbd>R</kbd> restart
     </div>
 
     <div class="buttons">
@@ -579,11 +579,23 @@ function mulberry32(seed) {
   }
 }
 
-// Today's puzzle seed — date-based so everyone gets the same one
+// Today's puzzle seed — rolls over at midnight America/New_York so every
+// player gets the same puzzle on the same "ET day" regardless of local TZ.
 function dateSeed(offset = 0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date());
+  const y = +parts.find(p => p.type === 'year').value;
+  const m = +parts.find(p => p.type === 'month').value;
+  const d = +parts.find(p => p.type === 'day').value;
+  // Apply offset in days via a UTC Date (date math), then re-read Y/M/D
+  if (offset !== 0) {
+    const base = new Date(Date.UTC(y, m - 1, d));
+    base.setUTCDate(base.getUTCDate() + offset);
+    return base.getUTCFullYear() * 10000 + (base.getUTCMonth() + 1) * 100 + base.getUTCDate();
+  }
+  return y * 10000 + m * 100 + d;
 }
 
 let currentSeed = dateSeed();
@@ -593,15 +605,64 @@ let puzzleOffset = 0;
 // Generate a puzzle: drop random pieces with gravity, then expose
 // the resulting silhouette as the target. The piece queue is the
 // order they were dropped — player must reach the same silhouette.
+//
+// Piece selection uses a 7-bag: every 7 draws contains each tetromino
+// exactly once, so puzzles never get five S-pieces in a row.
 // ----------------------------------------------------------------
-function generatePuzzle(seed) {
-  const rng = mulberry32(seed);
+function makeBag(rng) {
+  let bag = [];
+  return function nextPiece() {
+    if (bag.length === 0) {
+      bag = PIECE_TYPES.slice();
+      // Fisher-Yates shuffle using the seeded RNG
+      for (let i = bag.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [bag[i], bag[j]] = [bag[j], bag[i]];
+      }
+    }
+    return bag.shift();
+  };
+}
+
+// Score a candidate puzzle for "interestingness". Higher = more novel.
+// Rewards: complex perimeter, wide footprint, varied column heights,
+// diverse piece types. Punishes: tiny / single-column / mono-type blobs.
+function scorePuzzle({ target, queue }) {
+  const rows = target.length, cols = target[0].length;
+  let filled = 0, perimeter = 0;
+  const colHeights = Array(cols).fill(0);
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      if (!target[y][x]) continue;
+      filled++;
+      const h = rows - y;
+      if (h > colHeights[x]) colHeights[x] = h;
+      for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+        const nx = x + dx, ny = y + dy;
+        if (nx < 0 || nx >= cols || ny < 0 || ny >= rows || !target[ny][nx]) perimeter++;
+      }
+    }
+  }
+  if (filled === 0) return -Infinity;
+  const occupied = colHeights.filter(h => h > 0);
+  if (occupied.length < 3) return -Infinity;
+  const mean = occupied.reduce((a, b) => a + b, 0) / occupied.length;
+  const variance = occupied.reduce((a, h) => a + (h - mean) ** 2, 0) / occupied.length;
+  const distinctTypes = new Set(queue.map(q => q.type)).size;
+  return perimeter * 1.0
+       + occupied.length * 2.0
+       + Math.min(variance, 8) * 1.5
+       + distinctTypes * 4.0;
+}
+
+function generateCandidate(rng) {
   const grid = Array.from({length: cfg.rows}, () => Array(cfg.cols).fill(0));
   const queue = [];
   const targetPieceCount = cfg.pieceMin + Math.floor(rng() * (cfg.pieceMax - cfg.pieceMin + 1));
+  const nextPiece = makeBag(rng);
 
   for (let i = 0; i < targetPieceCount; i++) {
-    const type = PIECE_TYPES[Math.floor(rng() * PIECE_TYPES.length)];
+    const type = nextPiece();
     const rot = Math.floor(rng() * 4);
     const shape = PIECES[type].rotations[rot];
 
@@ -680,6 +741,20 @@ function generatePuzzle(seed) {
   }
 
   return { target: grid, queue };
+}
+
+// Generate several candidates from the seeded RNG stream and return the
+// one with the best novelty score. Deterministic: same seed → same pick.
+function generatePuzzle(seed) {
+  const rng = mulberry32(seed);
+  const CANDIDATES = 8;
+  let best = null, bestScore = -Infinity;
+  for (let i = 0; i < CANDIDATES; i++) {
+    const cand = generateCandidate(rng);
+    const s = scorePuzzle(cand);
+    if (s > bestScore) { bestScore = s; best = cand; }
+  }
+  return best;
 }
 
 function findDropY(grid, shape) {
@@ -1211,7 +1286,16 @@ function render() {
 // ----------------------------------------------------------------
 // Input
 // ----------------------------------------------------------------
-document.addEventListener('keydown', (e) => {
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'r' || e.key === 'R' || e.code === 'KeyR') {
+    e.preventDefault();
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+    const btn = document.getElementById('resetBtn');
+    if (btn) btn.click();
+    return;
+  }
   if (gameOver) return;
   switch (e.key) {
     case 'ArrowLeft': e.preventDefault(); move(-1); break;

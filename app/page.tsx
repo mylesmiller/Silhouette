@@ -42,7 +42,7 @@ export default function Page() {
   return (
     <div className="app">
       <header className="header-centered">
-        <h1 className="brand-title">silhouette.</h1>
+        <h1 className="brand-title">stax.</h1>
         <button
           className="help-btn header-help"
           aria-label="how to play"

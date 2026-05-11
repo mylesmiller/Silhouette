@@ -30,6 +30,7 @@ export default function HUD({ elapsedMs, canUndo, onUndo, onNewPuzzle, onReset }
         <span><kbd>↑</kbd> rotate</span>
         <span><kbd>↓</kbd> soft drop</span>
         <span><kbd>space</kbd> hard drop</span>
+        <span><kbd>R</kbd> restart</span>
       </div>
 
       <div className="buttons">

@@ -15,7 +15,7 @@ export function buildShareText(opts: {
     matchPct === 100 ? '🟩' : matchPct >= 80 ? '🟨' : '🟥';
   const s = Math.floor(elapsedMs / 1000);
   const time = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  const header = `silhouette #${String(puzzleNo).padStart(3, '0')} — ${difficulty} ${time} ${emoji}`;
+  const header = `stax #${String(puzzleNo).padStart(3, '0')} — ${difficulty} ${time} ${emoji}`;
 
   const rows = target.length;
   const cols = target[0]?.length ?? 0;
@@ -33,5 +33,5 @@ export function buildShareText(opts: {
     lines.push(line);
   }
 
-  return [header, '', ...lines, '', url ?? 'play: silhouette.app'].join('\n');
+  return [header, '', ...lines, '', url ?? 'play: staxgame.com'].join('\n');
 }

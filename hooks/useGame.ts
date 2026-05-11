@@ -209,6 +209,14 @@ export function useGame(): UseGame {
   // Keyboard input
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        setReloadKey((k) => k + 1);
+        return;
+      }
       if (gameOver) return;
       if (!active) return;
       const conf = DIFFICULTIES[difficulty];

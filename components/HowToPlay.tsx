@@ -37,8 +37,7 @@ export default function HowToPlay({ open, onClose }: Props) {
           <div className="howto-divider" />
 
           <div className="howto-keys">
-            <div><kbd>←</kbd> <kbd>→</kbd> move &nbsp; <kbd>↑</kbd> rotate</div>
-            <div><kbd>↓</kbd> soft drop &nbsp; <kbd>space</kbd> hard drop</div>
+            <div><kbd>↑</kbd> rotate &nbsp; <kbd>space</kbd> hard drop</div>
           </div>
 
           <div className="howto-divider" />

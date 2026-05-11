@@ -48,8 +48,6 @@ export default function ResultModal({
 
   const shareText = useMemo(() => {
     if (!open) return '';
-    const url =
-      typeof window !== 'undefined' ? window.location.origin : 'silhouette.app';
     return buildShareText({
       puzzleNo,
       difficulty,
@@ -57,7 +55,7 @@ export default function ResultModal({
       elapsedMs,
       target,
       board,
-      url,
+      url: 'staxgame.com',
     });
   }, [open, puzzleNo, difficulty, matchPct, elapsedMs, target, board]);
 
