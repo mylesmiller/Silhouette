@@ -25,8 +25,21 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://staxgame.com'),
   title: 'STAX',
   description: 'A daily stacking puzzle. Recreate the silhouette.',
+  openGraph: {
+    type: 'website',
+    url: 'https://staxgame.com',
+    siteName: 'STAX',
+    title: 'STAX — daily stacking puzzle',
+    description: 'A daily stacking puzzle. Recreate the silhouette.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'STAX — daily stacking puzzle',
+    description: 'A daily stacking puzzle. Recreate the silhouette.',
+  },
 };
 
 export default function RootLayout({
