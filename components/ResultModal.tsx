@@ -55,7 +55,7 @@ export default function ResultModal({
       elapsedMs,
       target,
       board,
-      url: 'staxgame.com',
+      url: 'www.staxgames.com',
     });
   }, [open, puzzleNo, difficulty, matchPct, elapsedMs, target, board]);
 
