@@ -21,10 +21,7 @@ export default function Page() {
 
   useEffect(() => {
     if (state.gameOver) setModalOpen(true);
-  }, [state.gameOver]);
-
-  useEffect(() => {
-    if (!state.gameOver) setModalOpen(false);
+    else setModalOpen(false);
   }, [state.gameOver, state.seed, state.puzzleOffset, state.difficulty]);
 
   useEffect(() => {

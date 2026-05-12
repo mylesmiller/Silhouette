@@ -53,6 +53,36 @@ export interface UseGame {
   setPaused: (paused: boolean) => void;
 }
 
+const COMPLETION_KEY_PREFIX = 'stax-completed:';
+
+interface SavedCompletion {
+  board: Board;
+  elapsedMs: number;
+  won: boolean;
+}
+
+function completionKey(seed: number, difficulty: Difficulty): string {
+  return `${COMPLETION_KEY_PREFIX}${seed}:${difficulty}`;
+}
+
+function loadCompletion(seed: number, difficulty: Difficulty): SavedCompletion | null {
+  try {
+    const raw = localStorage.getItem(completionKey(seed, difficulty));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SavedCompletion;
+    if (!parsed || !Array.isArray(parsed.board)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveCompletion(seed: number, difficulty: Difficulty, data: SavedCompletion): void {
+  try {
+    localStorage.setItem(completionKey(seed, difficulty), JSON.stringify(data));
+  } catch {}
+}
+
 function spawnFromQueue(
   queue: QueueEntry[],
   idx: number,
@@ -74,8 +104,29 @@ function spawnFromQueue(
   return { active: candidate, gameOver: false };
 }
 
+const LAST_DIFFICULTY_KEY = 'stax-last-difficulty';
+
+function loadLastDifficulty(): Difficulty {
+  try {
+    const raw = localStorage.getItem(LAST_DIFFICULTY_KEY);
+    if (raw === 'hard' || raw === 'daily') return raw;
+  } catch {}
+  return 'daily';
+}
+
 export function useGame(): UseGame {
   const [difficulty, setDifficultyState] = useState<Difficulty>('daily');
+
+  useEffect(() => {
+    const last = loadLastDifficulty();
+    if (last !== 'daily') setDifficultyState(last);
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LAST_DIFFICULTY_KEY, difficulty);
+    } catch {}
+  }, [difficulty]);
   const [puzzleOffset, setPuzzleOffset] = useState(0);
   const [seed, setSeed] = useState<number>(() => dateSeed());
 
@@ -117,11 +168,39 @@ export function useGame(): UseGame {
     const fresh = emptyBoard(newDims);
     const spawn = spawnFromQueue(puzzle.queue, 0, fresh, conf.cols, conf.rows);
 
-    setBoard(fresh);
+    const saved = puzzleOffset === 0 ? loadCompletion(seed, difficulty) : null;
+
     setTarget(puzzle.target);
     setQueue(puzzle.queue);
-    setQueueIdx(0);
     historyRef.current = [];
+    if (saved) {
+      setBoard(saved.board);
+      setQueueIdx(puzzle.queue.length);
+      setActive(null);
+      setGameOver(true);
+      setWon(saved.won);
+      const now = Date.now();
+      setStartedAt(now - saved.elapsedMs);
+      setEndedAt(now);
+      setNowTick(now);
+      setPausedAccumMs(0);
+      setPausedAt(null);
+      setSilhouetteHidden(false);
+      setPeekDeadline(null);
+      if (peekTimerRef.current) {
+        clearTimeout(peekTimerRef.current);
+        peekTimerRef.current = null;
+      }
+      if (peekRafRef.current) {
+        cancelAnimationFrame(peekRafRef.current);
+        peekRafRef.current = null;
+      }
+      keepTimerRef.current = false;
+      return;
+    }
+
+    setBoard(fresh);
+    setQueueIdx(0);
     setActive(spawn.active);
     setGameOver(spawn.gameOver);
     setWon(false);
@@ -220,13 +299,22 @@ export function useGame(): UseGame {
       // End game on either queue exhaust OR successful match (early win)
       const winNow = isWin(newBoard, target, { cols: conf.cols, rows: conf.rows });
       if (winNow || spawn.gameOver) {
+        const endTime = Date.now();
         setGameOver(true);
         setSilhouetteHidden(false);
         setWon(winNow);
-        setEndedAt(Date.now());
+        setEndedAt(endTime);
+        if (puzzleOffset === 0 && !loadCompletion(seed, difficulty)) {
+          const finalElapsedMs = endTime - startedAt - pausedAccumMs;
+          saveCompletion(seed, difficulty, {
+            board: newBoard,
+            elapsedMs: finalElapsedMs,
+            won: winNow,
+          });
+        }
       }
     },
-    [difficulty, queue, target]
+    [difficulty, queue, target, puzzleOffset, seed, startedAt, pausedAccumMs]
   );
 
   const undo = useCallback(() => {
