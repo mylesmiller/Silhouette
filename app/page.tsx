@@ -11,6 +11,7 @@ import ResultModal from '@/components/ResultModal';
 import HowToPlay from '@/components/HowToPlay';
 import TouchControls from '@/components/TouchControls';
 import { DIFFICULTIES } from '@/lib/difficulty';
+import { puzzleNumber } from '@/lib/rng';
 
 const HOWTO_KEY = 'silhouette-seen-howto';
 
@@ -118,7 +119,7 @@ export default function Page() {
         matchPct={stats.pct}
         overflow={stats.overflow}
         difficulty={state.difficulty}
-        puzzleNo={1 + state.puzzleOffset}
+        puzzleNo={puzzleNumber(state.puzzleOffset)}
         elapsedMs={elapsedMs}
         target={state.target}
         board={state.board}

@@ -44,6 +44,17 @@ export function dateSeed(offset = 0): number {
   return year * 10000 + month * 100 + day;
 }
 
+// Puzzle number — days since launch (2026-05-11 ET), 1-indexed.
+// offset shifts forward (for "new puzzle" preview).
+export function puzzleNumber(offset = 0): number {
+  const now = new Date();
+  const { year, month, day } = etParts(new Date(now.getTime() + offset * 86400000));
+  // UTC midnight of the ET calendar date — avoids DST drift when diffing days.
+  const todayUtc = Date.UTC(year, month - 1, day);
+  const launchUtc = Date.UTC(2026, 4, 11);
+  return Math.floor((todayUtc - launchUtc) / 86400000) + 1;
+}
+
 // Milliseconds until the next midnight in America/New_York.
 export function msUntilNextEtMidnight(now: Date = new Date()): number {
   const { hour, minute, second } = etParts(now);
